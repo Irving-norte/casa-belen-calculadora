@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@theme {
+  --color-beige: #E2DDD7;
+  --color-salvia: #D6E3C5;
+  --color-salvia-fuerte: #4F6B3A;
+  --color-tinta: #1A1A1A;
+  --color-gris-texto: #6B655C;
+  --color-peligro: #A63D2F;
+  --color-linea: #C9C3B8;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-beige);
+  color: var(--color-tinta);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+input, select, textarea {
+  font-size: 16px;
+}
