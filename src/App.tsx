@@ -1,6 +1,7 @@
 import { NavLink, Route, Routes } from 'react-router-dom'
 import Calculadora from './pantallas/Calculadora'
 import Historial from './pantallas/Historial'
+import DetallePedido from './pantallas/DetallePedido'
 import Catalogo from './pantallas/Catalogo'
 import Ajustes from './pantallas/Ajustes'
 import AvisoActualizacion from './AvisoActualizacion'
@@ -29,6 +30,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Calculadora />} />
           <Route path="/historial" element={<Historial />} />
+          <Route path="/pedido/:id" element={<DetallePedido />} />
           <Route path="/catalogo" element={<Catalogo />} />
           <Route path="/ajustes" element={<Ajustes />} />
           <Route path="*" element={<Calculadora />} />

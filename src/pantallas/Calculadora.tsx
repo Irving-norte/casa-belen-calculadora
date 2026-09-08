@@ -1,89 +1,77 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useProductos } from '../lib/hooks/useProductos'
 import { useBorradorPedido } from '../lib/hooks/useBorradorPedido'
+import * as pedidosRepo from '../lib/db/pedidos.repo'
 import SelectorCliente from './calculadora/SelectorCliente'
-import SelectorCategoria, { type CategoriaSeleccion } from './calculadora/SelectorCategoria'
-import RejillaNumeros from './calculadora/RejillaNumeros'
-import ListaAromas from './calculadora/ListaAromas'
-import CampoCantidad from './calculadora/CampoCantidad'
-import VistaPrecio from './calculadora/VistaPrecio'
+import AgregarProducto from './calculadora/AgregarProducto'
 import LineasBorrador from './calculadora/LineasBorrador'
 import BarraTotal from './calculadora/BarraTotal'
-import type { Producto } from '../lib/dominio/tipos'
 
 export default function Calculadora() {
   const productos = useProductos()
+  const navigate = useNavigate()
   const {
     tipoCliente,
     lineas,
     total,
-    recuperado,
+    avisoOrigen,
     seleccionarCliente,
     agregarProducto,
     cambiarCantidadDeLinea,
     quitarLinea,
-    descartarAvisoRecuperacion,
+    vaciar,
+    descartarAviso,
   } = useBorradorPedido()
 
-  const [categoria, setCategoria] = useState<CategoriaSeleccion | null>(null)
-  const [codigoSeleccionado, setCodigoSeleccionado] = useState<string | null>(null)
-  const [cantidad, setCantidad] = useState(1)
+  const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [deshacer, setDeshacer] = useState<{ id: string; tipoCliente: typeof tipoCliente; lineas: typeof lineas } | null>(null)
+  const temporizador = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const productoSeleccionado = useMemo<Producto | undefined>(() => {
-    if (!productos || !categoria || !codigoSeleccionado) return undefined
-    const [cat, sub] =
-      categoria === 'velas'
-        ? (['velas', 'punta'] as const)
-        : categoria === 'barro'
-          ? (['moldes', 'barro'] as const)
-          : categoria === 'madera'
-            ? (['moldes', 'madera'] as const)
-            : (['aromas', '30ml'] as const)
-    return productos.find(
-      (p) => p.categoria === cat && p.subcategoria === sub && p.codigo === codigoSeleccionado,
-    )
-  }, [productos, categoria, codigoSeleccionado])
-
-  function elegirCategoria(c: CategoriaSeleccion) {
-    setCategoria(c)
-    setCodigoSeleccionado(null)
-    setCantidad(1)
-    setError(null)
-  }
-
-  function agregar() {
-    if (!productoSeleccionado) return
-    try {
-      agregarProducto(productoSeleccionado, cantidad)
-      setCodigoSeleccionado(null)
-      setCantidad(1)
-      setError(null)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'No se pudo agregar el producto')
-    }
-  }
+  useEffect(() => () => {
+    if (temporizador.current) clearTimeout(temporizador.current)
+  }, [])
 
   function copiar() {
-    // Se implementa en la Fase 7 (texto para WhatsApp).
+    // Se implementa en la Fase 7 (texto con el formato exacto de WhatsApp).
     window.alert('Copiar pedido estará disponible en la Fase 7.')
   }
 
-  function guardar() {
-    // Se implementa en la Fase 5 (historial con precios congelados).
-    window.alert('Guardar pedido estará disponible en la Fase 5.')
+  async function guardar() {
+    setError(null)
+    setGuardando(true)
+    try {
+      const pedido = await pedidosRepo.crear({ tipoCliente, lineas })
+      setDeshacer({ id: pedido.id, tipoCliente, lineas })
+      vaciar()
+      if (temporizador.current) clearTimeout(temporizador.current)
+      temporizador.current = setTimeout(() => setDeshacer(null), 6000)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo guardar el pedido')
+    } finally {
+      setGuardando(false)
+    }
   }
 
-  const velas = productos?.filter((p) => p.categoria === 'velas') ?? []
-  const aromas = productos?.filter((p) => p.categoria === 'aromas') ?? []
+  async function deshacerGuardado() {
+    if (!deshacer) return
+    await pedidosRepo.eliminar(deshacer.id)
+    setDeshacer(null)
+    if (temporizador.current) clearTimeout(temporizador.current)
+  }
 
   return (
     <div className="space-y-4">
-      {recuperado && (
+      {avisoOrigen && (
         <div className="flex items-center justify-between gap-3 rounded-lg bg-salvia px-3 py-2">
-          <span className="text-[13px] text-salvia-fuerte">Recuperamos tu pedido sin terminar</span>
+          <span className="text-[13px] text-salvia-fuerte">
+            {avisoOrigen === 'recuperado'
+              ? 'Recuperamos tu pedido sin terminar'
+              : 'Pedido cargado para corregirlo'}
+          </span>
           <button
-            onClick={descartarAvisoRecuperacion}
+            onClick={descartarAviso}
             className="text-[13px] font-medium text-salvia-fuerte underline"
           >
             Entendido
@@ -91,82 +79,37 @@ export default function Calculadora() {
         </div>
       )}
 
-      <SelectorCliente valor={tipoCliente} onCambiar={seleccionarCliente} />
+      {deshacer && (
+        <div className="flex items-center justify-between gap-3 rounded-lg bg-tinta px-3 py-2.5">
+          <span className="text-[13px] text-white">Pedido guardado</span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={deshacerGuardado}
+              className="text-[13px] font-medium text-white underline"
+            >
+              Deshacer
+            </button>
+            <button
+              onClick={() => navigate(`/pedido/${deshacer.id}`)}
+              className="text-[13px] font-medium text-white underline"
+            >
+              Ver
+            </button>
+          </div>
+        </div>
+      )}
+
+      <SelectorCliente
+        valor={tipoCliente}
+        onCambiar={(t) => seleccionarCliente(t, productos ?? [])}
+      />
 
       <section className="rounded-xl bg-white p-4">
-        <p className="mb-2 text-[12px] text-gris-texto">Agregar producto</p>
-        <SelectorCategoria valor={categoria} onCambiar={elegirCategoria} />
-
-        {categoria && (
-          <div className="mt-4 space-y-4">
-            {categoria === 'velas' && (
-              <div className="grid grid-cols-3 gap-2">
-                {velas.map((v) => {
-                  const activo = v.codigo === codigoSeleccionado
-                  return (
-                    <button
-                      key={v.id}
-                      onClick={() => setCodigoSeleccionado(v.codigo)}
-                      className={
-                        'rounded-lg py-3 text-[13px] font-medium capitalize ' +
-                        (activo ? 'bg-salvia-fuerte text-white' : 'border border-linea text-tinta')
-                      }
-                    >
-                      {v.codigo}
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-
-            {categoria === 'barro' && (
-              <RejillaNumeros
-                desde={1}
-                hasta={40}
-                seleccionado={codigoSeleccionado ? Number(codigoSeleccionado) : null}
-                onSeleccionar={(n) => setCodigoSeleccionado(String(n))}
-              />
-            )}
-
-            {categoria === 'madera' && (
-              <RejillaNumeros
-                desde={1}
-                hasta={17}
-                seleccionado={codigoSeleccionado ? Number(codigoSeleccionado) : null}
-                onSeleccionar={(n) => setCodigoSeleccionado(String(n))}
-              />
-            )}
-
-            {categoria === 'aromas' && (
-              <ListaAromas
-                aromas={aromas}
-                seleccionado={
-                  codigoSeleccionado
-                    ? (aromas.find((a) => a.codigo === codigoSeleccionado)?.id ?? null)
-                    : null
-                }
-                onSeleccionar={(id) => {
-                  const aroma = aromas.find((a) => a.id === id)
-                  if (aroma) setCodigoSeleccionado(aroma.codigo)
-                }}
-              />
-            )}
-
-            {productoSeleccionado && (
-              <>
-                <VistaPrecio producto={productoSeleccionado} tipoCliente={tipoCliente} />
-                <CampoCantidad valor={cantidad} onCambiar={setCantidad} />
-                {error && <p className="text-[13px] text-peligro">{error}</p>}
-                <button
-                  onClick={agregar}
-                  className="w-full rounded-lg bg-tinta py-3.5 text-[15px] font-medium text-white"
-                >
-                  + Agregar
-                </button>
-              </>
-            )}
-          </div>
-        )}
+        <AgregarProducto
+          productos={productos ?? []}
+          tipoCliente={tipoCliente}
+          onAgregar={agregarProducto}
+        />
       </section>
 
       <section className="rounded-xl bg-white p-4 pb-2">
@@ -176,12 +119,18 @@ export default function Calculadora() {
           onCambiarCantidad={cambiarCantidadDeLinea}
           onQuitar={quitarLinea}
         />
+        {error && <p className="pb-3 text-[13px] text-peligro">{error}</p>}
       </section>
 
       {/* Espacio para que la última línea no quede tapada por la barra fija de abajo */}
       <div className="h-24" />
 
-      <BarraTotal total={total} hayLineas={lineas.length > 0} onCopiar={copiar} onGuardar={guardar} />
+      <BarraTotal
+        total={total}
+        hayLineas={lineas.length > 0 && !guardando}
+        onCopiar={copiar}
+        onGuardar={guardar}
+      />
     </div>
   )
 }

@@ -5,6 +5,7 @@ import {
   cambiarCantidad,
   eliminarLinea,
   calcularTotal,
+  recalcularPreciosPorTipoCliente,
   validarPedidoNoVacio,
 } from '../lib/dominio/pedido'
 import { ErrorDeValidacion } from '../lib/dominio/errores'
@@ -96,6 +97,42 @@ describe('calcularTotal — pedido mixto del documento del cliente (§26)', () =
     lineas = agregarLinea(lineas, crearLineaDesdeProducto(vanilla, 'alumno', 2)) // $96
 
     expect(calcularTotal(lineas)).toBe(109600) // $1,096.00 en centavos
+  })
+})
+
+describe('recalcularPreciosPorTipoCliente — cambiar de tipo de cliente en un borrador sin guardar', () => {
+  const barro1: Producto = {
+    id: 'moldes-barro-1', categoria: 'moldes', subcategoria: 'barro', codigo: '1',
+    nombre: 'Molde de barro #1', precioGeneral: 25500, precioAlumno: 22500, orden: 0,
+  }
+  const velaChica: Producto = {
+    id: 'velas-punta-chica', categoria: 'velas', subcategoria: 'punta', codigo: 'chica',
+    nombre: 'Vela de punta chica', precio: 1700, orden: 0,
+  }
+  const catalogo = [barro1, velaChica]
+
+  it('ajusta un molde ya agregado al cambiar de Alumno a General (el bug reportado)', () => {
+    let lineas = agregarLinea([], crearLineaDesdeProducto(barro1, 'alumno', 2)) // $225 c/u
+    lineas = recalcularPreciosPorTipoCliente(lineas, catalogo, 'general')
+
+    expect(lineas[0]?.precioUnitario).toBe(25500) // ahora $255
+    expect(lineas[0]?.subtotal).toBe(51000)
+  })
+
+  it('no toca velas ni aromas: su precio no depende del tipo de cliente', () => {
+    let lineas = agregarLinea([], crearLineaDesdeProducto(velaChica, 'alumno', 3))
+    lineas = recalcularPreciosPorTipoCliente(lineas, catalogo, 'general')
+
+    expect(lineas[0]?.precioUnitario).toBe(1700) // sin cambio
+  })
+
+  it('recalcula varias líneas mixtas a la vez', () => {
+    let lineas = agregarLinea([], crearLineaDesdeProducto(barro1, 'alumno', 1))
+    lineas = agregarLinea(lineas, crearLineaDesdeProducto(velaChica, 'alumno', 5))
+    lineas = recalcularPreciosPorTipoCliente(lineas, catalogo, 'general')
+
+    expect(lineas.find((l) => l.productoId === barro1.id)?.precioUnitario).toBe(25500)
+    expect(lineas.find((l) => l.productoId === velaChica.id)?.precioUnitario).toBe(1700)
   })
 })
 

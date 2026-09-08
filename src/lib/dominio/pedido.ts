@@ -71,6 +71,37 @@ export function calcularTotal(lineas: LineaPedido[]): number {
   return lineas.reduce((suma, l) => suma + l.subtotal, 0)
 }
 
+/**
+ * Recalcula el precio de cada línea del BORRADOR (nunca de un pedido ya
+ * guardado) contra el tipo de cliente recién elegido.
+ *
+ * Mientras un pedido no se ha guardado, no hay nada que "congelar"
+ * todavía: si el usuario cambia de Alumno a General a medio armar el
+ * pedido, lo esperable es que las líneas ya agregadas se ajusten a la
+ * tarifa correcta, no que queden mezcladas con la tarifa anterior. Esto
+ * es distinto de la congelación de precios históricos, que solo protege
+ * pedidos ya guardados (ver `pedidosRepo.actualizar`, que ni siquiera
+ * acepta cambiar el tipo de cliente).
+ *
+ * Las velas y los aromas no varían por tipo de cliente, así que sus
+ * líneas quedan intactas.
+ */
+export function recalcularPreciosPorTipoCliente(
+  lineas: LineaPedido[],
+  productos: Producto[],
+  tipoCliente: TipoCliente,
+): LineaPedido[] {
+  return lineas.map((linea) => {
+    const producto = productos.find((p) => p.id === linea.productoId)
+    if (!producto || producto.precioGeneral == null || producto.precioAlumno == null) {
+      return linea // no es un molde con tarifa doble: no depende del tipo de cliente
+    }
+    const nuevoPrecio = precioUnitario(producto, tipoCliente)
+    if (nuevoPrecio === linea.precioUnitario) return linea
+    return { ...linea, precioUnitario: nuevoPrecio, subtotal: nuevoPrecio * linea.cantidad }
+  })
+}
+
 export function validarPedidoNoVacio(lineas: LineaPedido[]): void {
   if (lineas.length === 0) {
     throw new ErrorDeValidacion('Agrega al menos un producto antes de guardar')
