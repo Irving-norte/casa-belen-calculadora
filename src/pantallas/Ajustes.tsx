@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { restaurarCatalogoDeFabrica } from '../lib/db/seed'
+import SeccionRespaldo from './ajustes/SeccionRespaldo'
 
 export default function Ajustes() {
   const [confirmando, setConfirmando] = useState(false)
@@ -27,7 +28,7 @@ export default function Ajustes() {
       <section className="rounded-xl bg-white p-4">
         <h2 className="text-[15px] font-medium">Ajustes</h2>
         <p className="mt-1 text-[13px] text-gris-texto">
-          Fase 6 agregará aquí exportar e importar los datos.
+          Casa Belén — Calculadora de pedidos.
         </p>
         <dl className="mt-4 space-y-2 border-t border-linea pt-3 text-[13px]">
           <div className="flex justify-between">
@@ -44,6 +45,8 @@ export default function Ajustes() {
           </div>
         </dl>
       </section>
+
+      <SeccionRespaldo />
 
       <section className="rounded-xl bg-white p-4">
         <h3 className="text-[14px] font-medium">Catálogo</h3>

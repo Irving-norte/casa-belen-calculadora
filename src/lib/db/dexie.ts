@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { Producto, Pedido } from '../dominio/tipos'
+import { ErrorDeValidacion } from '../dominio/errores'
 
 export interface MetaRegistro {
   clave: string
@@ -32,6 +33,7 @@ export async function operacionSegura<T>(op: () => Promise<T>, contexto: string)
   try {
     return await op()
   } catch (error) {
+    if (error instanceof ErrorDeValidacion) throw error // mensaje ya pensado para el usuario
     console.error(`[db] ${contexto}:`, error)
     throw new Error(`No se pudo completar: ${contexto}. Intenta de nuevo.`)
   }

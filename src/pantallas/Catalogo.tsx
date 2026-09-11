@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useProductos } from '../lib/hooks/useProductos'
 import FilaProducto from './catalogo/FilaProducto'
+import SeccionCSVPrecios from './catalogo/SeccionCSVPrecios'
 import type { Categoria, Subcategoria } from '../lib/dominio/tipos'
 
 const GRUPOS: { titulo: string; categoria: Categoria; subcategoria: Subcategoria }[] = [
@@ -49,6 +50,8 @@ export default function Catalogo() {
         placeholder="Buscar producto…"
         className="w-full rounded-lg border border-linea bg-white px-3 py-3 text-[14px]"
       />
+
+      <SeccionCSVPrecios productos={productos} />
 
       {gruposConProductos.length === 0 && (
         <p className="text-[13px] text-gris-texto">Sin resultados para "{busqueda}"</p>
