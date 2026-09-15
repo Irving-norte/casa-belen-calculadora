@@ -18,3 +18,18 @@ export function leerArchivoComoTexto(archivo: File): Promise<string> {
     lector.readAsText(archivo, 'utf-8')
   })
 }
+
+/**
+ * Intenta copiar al portapapeles con la API moderna. Si falla (navegador
+ * sin soporte, permiso denegado, contexto no seguro), regresa `false` para
+ * que quien llama pueda ofrecer una alternativa — por ejemplo un cuadro de
+ * texto seleccionable con `window.prompt`.
+ */
+export async function copiarAlPortapapeles(texto: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(texto)
+    return true
+  } catch {
+    return false
+  }
+}

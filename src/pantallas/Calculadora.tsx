@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProductos } from '../lib/hooks/useProductos'
 import { useBorradorPedido } from '../lib/hooks/useBorradorPedido'
+import { useCopiarPedido } from '../lib/hooks/useCopiarPedido'
 import * as pedidosRepo from '../lib/db/pedidos.repo'
 import SelectorCliente from './calculadora/SelectorCliente'
 import AgregarProducto from './calculadora/AgregarProducto'
@@ -24,6 +25,7 @@ export default function Calculadora() {
     descartarAviso,
   } = useBorradorPedido()
 
+  const { estado: estadoCopiar, copiar } = useCopiarPedido()
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [deshacer, setDeshacer] = useState<{ id: string; tipoCliente: typeof tipoCliente; lineas: typeof lineas } | null>(null)
@@ -33,9 +35,8 @@ export default function Calculadora() {
     if (temporizador.current) clearTimeout(temporizador.current)
   }, [])
 
-  function copiar() {
-    // Se implementa en la Fase 7 (texto con el formato exacto de WhatsApp).
-    window.alert('Copiar pedido estará disponible en la Fase 7.')
+  function copiarPedido() {
+    void copiar(tipoCliente, lineas, total)
   }
 
   async function guardar() {
@@ -99,6 +100,14 @@ export default function Calculadora() {
         </div>
       )}
 
+      {estadoCopiar === 'copiado' && (
+        <div className="rounded-lg bg-salvia px-3 py-2">
+          <span className="text-[13px] text-salvia-fuerte">
+            Pedido copiado. Ya puedes pegarlo en WhatsApp.
+          </span>
+        </div>
+      )}
+
       <SelectorCliente
         valor={tipoCliente}
         onCambiar={(t) => seleccionarCliente(t, productos ?? [])}
@@ -128,7 +137,7 @@ export default function Calculadora() {
       <BarraTotal
         total={total}
         hayLineas={lineas.length > 0 && !guardando}
-        onCopiar={copiar}
+        onCopiar={copiarPedido}
         onGuardar={guardar}
       />
     </div>

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { usePedido } from '../lib/hooks/useHistorial'
 import { useProductos } from '../lib/hooks/useProductos'
 import { cargarBorradorParaDuplicar } from '../lib/hooks/useBorradorPedido'
+import { useCopiarPedido } from '../lib/hooks/useCopiarPedido'
 import * as pedidosRepo from '../lib/db/pedidos.repo'
 import { agregarLinea, cambiarCantidad, eliminarLinea, calcularTotal } from '../lib/dominio/pedido'
 import { formatear } from '../lib/dominio/dinero'
@@ -26,6 +27,7 @@ export default function DetallePedido() {
   const productos = useProductos()
   const navigate = useNavigate()
 
+  const { estado: estadoCopiar, copiar } = useCopiarPedido()
   const [editando, setEditando] = useState(false)
   const [lineasEdicion, setLineasEdicion] = useState<LineaPedido[]>([])
   const [guardando, setGuardando] = useState(false)
@@ -200,12 +202,23 @@ export default function DetallePedido() {
             </button>
           </div>
         ) : (
-          <button
-            onClick={duplicar}
-            className="mt-3 w-full rounded-lg border border-linea py-2.5 text-[14px] text-tinta"
-          >
-            Duplicar como pedido nuevo
-          </button>
+          <div className="mt-3 space-y-2">
+            <button
+              onClick={() => void copiar(pedido.tipoCliente, pedido.lineas, pedido.total)}
+              className="w-full rounded-lg border border-tinta py-2.5 text-[14px] text-tinta"
+            >
+              Copiar para WhatsApp
+            </button>
+            {estadoCopiar === 'copiado' && (
+              <p className="text-center text-[12px] text-salvia-fuerte">Pedido copiado</p>
+            )}
+            <button
+              onClick={duplicar}
+              className="w-full rounded-lg border border-linea py-2.5 text-[14px] text-tinta"
+            >
+              Duplicar como pedido nuevo
+            </button>
+          </div>
         )}
       </section>
 
