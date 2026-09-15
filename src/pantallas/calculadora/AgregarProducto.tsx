@@ -125,7 +125,7 @@ export default function AgregarProducto({
               {error && <p className="text-[13px] text-peligro">{error}</p>}
               <button
                 onClick={agregar}
-                className="w-full rounded-lg bg-tinta py-3.5 text-[15px] font-medium text-white"
+                className="w-full rounded-lg bg-salvia-fuerte py-3.5 text-[15px] font-medium text-white"
               >
                 + Agregar
               </button>
