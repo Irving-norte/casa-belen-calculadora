@@ -32,7 +32,7 @@ export default function LineasBorrador({
           <div className="flex shrink-0 items-center gap-1.5">
             <button
               onClick={() => onCambiarCantidad(l.productoId, Math.max(1, l.cantidad - 1))}
-              className="h-8 w-8 rounded-md border border-linea text-[16px] text-tinta"
+              className="h-9 w-9 rounded-md border border-linea text-[16px] text-tinta"
               aria-label={`Quitar uno de ${l.nombreProducto}`}
             >
               −
@@ -40,14 +40,14 @@ export default function LineasBorrador({
             <span className="w-6 text-center text-[14px]">{l.cantidad}</span>
             <button
               onClick={() => onCambiarCantidad(l.productoId, l.cantidad + 1)}
-              className="h-8 w-8 rounded-md border border-linea text-[16px] text-tinta"
+              className="h-9 w-9 rounded-md border border-linea text-[16px] text-tinta"
               aria-label={`Agregar uno de ${l.nombreProducto}`}
             >
               +
             </button>
             <button
               onClick={() => onQuitar(l.productoId)}
-              className="ml-1 h-8 w-8 rounded-md text-[16px] text-peligro"
+              className="ml-1 h-9 w-9 rounded-md text-[16px] text-peligro"
               aria-label={`Quitar ${l.nombreProducto} del pedido`}
             >
               🗑

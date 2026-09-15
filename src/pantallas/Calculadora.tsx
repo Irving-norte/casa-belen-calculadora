@@ -131,8 +131,11 @@ export default function Calculadora() {
         {error && <p className="pb-3 text-[13px] text-peligro">{error}</p>}
       </section>
 
-      {/* Espacio para que la última línea no quede tapada por la barra fija de abajo */}
-      <div className="h-24" />
+      {/* Reserva espacio para que la última línea no quede tapada por la
+          barra de total y la navegación, ambas fijas y superpuestas al
+          contenido. La altura se calcula contra las mismas medidas reales
+          (nav = 4rem) en vez de un número adivinado. */}
+      <div className="h-[calc(4rem+7.5rem+env(safe-area-inset-bottom))]" />
 
       <BarraTotal
         total={total}

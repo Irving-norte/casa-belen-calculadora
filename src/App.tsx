@@ -37,14 +37,14 @@ export default function App() {
         </Routes>
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 grid grid-cols-4 border-t border-linea bg-beige pb-[env(safe-area-inset-bottom)]">
+      <nav className="fixed inset-x-0 bottom-0 grid h-16 grid-cols-4 border-t border-linea bg-beige pb-[env(safe-area-inset-bottom)]">
         {NAV.map(({ a, texto }) => (
           <NavLink
             key={a}
             to={a}
             end={a === '/'}
             className={({ isActive }) =>
-              'py-4 text-center text-[13px] ' +
+              'flex items-center justify-center text-center text-[13px] ' +
               (isActive ? 'font-medium text-salvia-fuerte' : 'text-gris-texto')
             }
           >
